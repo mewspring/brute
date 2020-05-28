@@ -60,23 +60,21 @@ func brute(charsetFirstChar string, wg *sync.WaitGroup) {
 								buf[6] = byte(g)
 								for _, h := range charset {
 									buf[7] = byte(h)
-									for extLen := 2; extLen <= 3; extLen++ {
-										dunName := string(buf[:])
-										relPath := `levels\l1data\` + dunName + ".dun"
-										if first {
-											fmt.Println("relPath (first):", relPath)
-											first = false
+									dunName := string(buf[:])
+									relPath := `levels\l1data\` + dunName + ".dun"
+									if first {
+										fmt.Println("relPath (first):", relPath)
+										first = false
+									}
+									if check(relPath) {
+										fmt.Println("FOUND:", relPath)
+										data := []byte(relPath)
+										const outputPath = "found.txt"
+										fmt.Println("creating %q", outputPath)
+										if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
+											log.Printf("unable to create file %q", outputPath)
 										}
-										if check(relPath) {
-											fmt.Println("FOUND:", relPath)
-											data := []byte(relPath)
-											const outputPath = "found.txt"
-											fmt.Println("creating %q", outputPath)
-											if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
-												log.Printf("unable to create file %q", outputPath)
-											}
-											os.Exit(1)
-										}
+										os.Exit(1)
 									}
 								}
 							}
