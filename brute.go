@@ -46,10 +46,16 @@ func brute(charsetFirstChar string, wg *sync.WaitGroup, nsamples int) {
 	first := true
 	const n = 8
 	fmt.Println("n:", n)
-	var buf [n]byte
+	const ext = ".DUN"
+	buf := make([]byte, n+len(ext))
+	for i := 0; i < len(ext); i++ {
+		j := len(buf) - len(ext) + i
+		buf[j] = ext[i]
+	}
 	// Generate precomputed hash of prefix.
-	preA := hashPrefix(`LEVELS\L1DATA\`, hashPathA)
-	preB := hashPrefix(`LEVELS\L1DATA\`, hashPathB)
+	const prefix = `LEVELS\L1DATA\`
+	preA := hashPrefix(prefix, hashPathA)
+	preB := hashPrefix(prefix, hashPathB)
 loop:
 	for _, a := range charsetFirstChar {
 		buf[0] = byte(a)
@@ -69,15 +75,14 @@ loop:
 								for _, h := range charset {
 									buf[7] = byte(h)
 									dunName := string(buf[:])
-									relPath := dunName + ".DUN"
 									if first {
-										fmt.Println("relPath (first):", relPath)
+										fmt.Println("dunName (first):", dunName)
 										first = false
 									}
 									// copy precomputed hash; pass-by-value.
-									if check(relPath, preA, preB) {
-										fmt.Println("FOUND:", relPath)
-										data := []byte(relPath)
+									if check(dunName, preA, preB) {
+										fmt.Println("FOUND:", dunName)
+										data := []byte(dunName)
 										const outputPath = "found.txt"
 										fmt.Println("creating %q", outputPath)
 										if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
