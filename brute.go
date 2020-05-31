@@ -23,7 +23,6 @@ func main() {
 	m := len(charsetFirstChar) / n
 	wg := &sync.WaitGroup{}
 	startTime := time.Now()
-	nsamples := 1_000_000_000 / n
 	for i := 0; i < n; i++ {
 		start := i * m
 		end := (i + 1) * m
@@ -32,14 +31,14 @@ func main() {
 		}
 		part := charsetFirstChar[start:end]
 		wg.Add(1)
-		go brute(part, wg, nsamples)
+		go brute(part, wg)
 	}
 	wg.Wait()
 	timeTaken := time.Since(startTime)
 	fmt.Println("timeTaken:", timeTaken)
 }
 
-func brute(charsetFirstChar string, wg *sync.WaitGroup, nsamples int) {
+func brute(charsetFirstChar string, wg *sync.WaitGroup) {
 	const (
 		charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 	)
@@ -56,7 +55,6 @@ func brute(charsetFirstChar string, wg *sync.WaitGroup, nsamples int) {
 	prefix := []byte(`LEVELS\L1DATA\`)
 	preA := hashPrefix(prefix, hashPathA)
 	preB := hashPrefix(prefix, hashPathB)
-loop:
 	for _, a := range charsetFirstChar {
 		dunName[0] = byte(a)
 		for _, b := range charset {
@@ -88,10 +86,6 @@ loop:
 											log.Printf("unable to create file %q", outputPath)
 										}
 										os.Exit(1)
-									}
-									nsamples--
-									if nsamples <= 0 {
-										break loop
 									}
 								}
 							}
