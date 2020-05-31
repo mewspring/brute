@@ -47,6 +47,9 @@ func brute(charsetFirstChar string, wg *sync.WaitGroup, nsamples int) {
 	const n = 8
 	fmt.Println("n:", n)
 	var buf [n]byte
+	// Generate precomputed hash of prefix.
+	preA := hashPrefix(`LEVELS\L1DATA\`, hashPathA)
+	preB := hashPrefix(`LEVELS\L1DATA\`, hashPathB)
 loop:
 	for _, a := range charsetFirstChar {
 		buf[0] = byte(a)
@@ -66,12 +69,13 @@ loop:
 								for _, h := range charset {
 									buf[7] = byte(h)
 									dunName := string(buf[:])
-									relPath := `LEVELS\L1DATA\` + dunName + ".DUN"
+									relPath := dunName + ".DUN"
 									if first {
 										fmt.Println("relPath (first):", relPath)
 										first = false
 									}
-									if check(relPath) {
+									// copy precomputed hash; pass-by-value.
+									if check(relPath, preA, preB) {
 										fmt.Println("FOUND:", relPath)
 										data := []byte(relPath)
 										const outputPath = "found.txt"
@@ -96,19 +100,19 @@ loop:
 	wg.Done()
 }
 
-func check(relPath string) bool {
+func check(relPath string, preA, preB prehash) bool {
 	// hash A 0xB29FC135 and hash B 0x22575C4A
 	const (
 		wantHashA = 0xB29FC135
 		wantHashB = 0x22575C4A
 	)
-	hashA := genHash(relPath, hashPathA)
+	hashA := preA.genHash(relPath, hashPathA)
 	//fmt.Printf("A: 0x%08X\n", hashA)
 	//fmt.Printf("B: 0x%08X\n", hashB)
 	foundA := hashA == wantHashA
 	if foundA {
 		fmt.Println("relPath (found A):", relPath)
-		hashB := genHash(relPath, hashPathB)
+		hashB := preB.genHash(relPath, hashPathB)
 		foundB := hashB == wantHashB
 		if foundB {
 			fmt.Println("relPath (found A and B):", relPath)
@@ -165,6 +169,41 @@ const (
 	// Hash of the file name, which specifies the encryption key of the file.
 	hashFileKey hashType = 0x300
 )
+
+// precomputed hash for prefix of a string.
+type prehash struct {
+	seed1 uint32
+	seed2 uint32
+}
+
+
+// hashPrefix returns a precomputed hash based on the given prefix.
+func hashPrefix(prefix string, hashType hashType) prehash {
+	seed1 := uint32(0x7FED7FED)
+	seed2 := uint32(0xEEEEEEEE)
+	for i := 0; i < len(prefix); i++ {
+		v := uint32(prefix[i])
+		seed1 = cryptTable[uint32(hashType)+v] ^ (seed1 + seed2)
+		seed2 = v + seed1 + seed2 + (seed2 << 5) + 3
+	}
+	return prehash{
+		seed1: seed1,
+		seed2: seed2,
+	}
+}
+
+// genHash returns the hash of the given string, based on the specified hash
+// type and the precomputed hash of the string prefix.
+func (pre prehash) genHash(s string, hashType hashType) uint32 {
+	seed1 := pre.seed1
+	seed2 := pre.seed2
+	for i := 0; i < len(s); i++ {
+		v := uint32(s[i])
+		seed1 = cryptTable[uint32(hashType)+v] ^ (seed1 + seed2)
+		seed2 = v + seed1 + seed2 + (seed2 << 5) + 3
+	}
+	return seed1
+}
 
 // genHash returns the hash of the given string, based on the specified hash
 // type.
