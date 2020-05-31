@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 )
 
 func main() {
@@ -22,6 +23,8 @@ func main() {
 	fmt.Println("num CPU:", n)
 	m := len(charsetFirstChar) / n
 	wg := &sync.WaitGroup{}
+	startTime := time.Now()
+	nsamples := 1_000_000_000 / n
 	for i := 0; i < n; i++ {
 		start := i * m
 		end := (i + 1) * m
@@ -30,12 +33,14 @@ func main() {
 		}
 		part := charsetFirstChar[start:end]
 		wg.Add(1)
-		go brute(part, wg)
+		go brute(part, wg, nsamples)
 	}
 	wg.Wait()
+	timeTaken := time.Since(startTime)
+	fmt.Println("timeTaken:", timeTaken)
 }
 
-func brute(charsetFirstChar string, wg *sync.WaitGroup) {
+func brute(charsetFirstChar string, wg *sync.WaitGroup, nsamples int) {
 	const (
 		charset = "abcdefghijklmnopqrstuvwxyz0123456789-_"
 	)
@@ -43,6 +48,7 @@ func brute(charsetFirstChar string, wg *sync.WaitGroup) {
 	const n = 8
 	fmt.Println("n:", n)
 	var buf [n]byte
+loop:
 	for _, a := range charsetFirstChar {
 		buf[0] = byte(a)
 		for _, b := range charset {
@@ -75,6 +81,10 @@ func brute(charsetFirstChar string, wg *sync.WaitGroup) {
 											log.Printf("unable to create file %q", outputPath)
 										}
 										os.Exit(1)
+									}
+									nsamples--
+									if nsamples <= 0 {
+										break loop
 									}
 								}
 							}
