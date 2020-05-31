@@ -47,41 +47,40 @@ func brute(charsetFirstChar string, wg *sync.WaitGroup, nsamples int) {
 	const n = 8
 	fmt.Println("n:", n)
 	const ext = ".DUN"
-	buf := make([]byte, n+len(ext))
+	dunName := make([]byte, n+len(ext))
 	for i := 0; i < len(ext); i++ {
-		j := len(buf) - len(ext) + i
-		buf[j] = ext[i]
+		j := len(dunName) - len(ext) + i
+		dunName[j] = ext[i]
 	}
 	// Generate precomputed hash of prefix.
-	const prefix = `LEVELS\L1DATA\`
+	prefix := []byte(`LEVELS\L1DATA\`)
 	preA := hashPrefix(prefix, hashPathA)
 	preB := hashPrefix(prefix, hashPathB)
 loop:
 	for _, a := range charsetFirstChar {
-		buf[0] = byte(a)
+		dunName[0] = byte(a)
 		for _, b := range charset {
-			buf[1] = byte(b)
+			dunName[1] = byte(b)
 			fmt.Printf("b: '%c%c'\n", a, b)
 			for _, c := range charset {
-				buf[2] = byte(c)
+				dunName[2] = byte(c)
 				for _, d := range charset {
-					buf[3] = byte(d)
+					dunName[3] = byte(d)
 					for _, e := range charset {
-						buf[4] = byte(e)
+						dunName[4] = byte(e)
 						for _, f := range charset {
-							buf[5] = byte(f)
+							dunName[5] = byte(f)
 							for _, g := range charset {
-								buf[6] = byte(g)
+								dunName[6] = byte(g)
 								for _, h := range charset {
-									buf[7] = byte(h)
-									dunName := string(buf[:])
+									dunName[7] = byte(h)
 									if first {
-										fmt.Println("dunName (first):", dunName)
+										fmt.Println("dunName (first):", string(dunName))
 										first = false
 									}
 									// copy precomputed hash; pass-by-value.
 									if check(dunName, preA, preB) {
-										fmt.Println("FOUND:", dunName)
+										fmt.Println("FOUND:", string(dunName))
 										data := []byte(dunName)
 										const outputPath = "found.txt"
 										fmt.Println("creating %q", outputPath)
@@ -105,7 +104,7 @@ loop:
 	wg.Done()
 }
 
-func check(relPath string, preA, preB prehash) bool {
+func check(relPath []byte, preA, preB prehash) bool {
 	// hash A 0xB29FC135 and hash B 0x22575C4A
 	const (
 		wantHashA = 0xB29FC135
@@ -116,11 +115,11 @@ func check(relPath string, preA, preB prehash) bool {
 	//fmt.Printf("B: 0x%08X\n", hashB)
 	foundA := hashA == wantHashA
 	if foundA {
-		fmt.Println("relPath (found A):", relPath)
+		fmt.Println("relPath (found A):", string(relPath))
 		hashB := preB.genHash(relPath, hashPathB)
 		foundB := hashB == wantHashB
 		if foundB {
-			fmt.Println("relPath (found A and B):", relPath)
+			fmt.Println("relPath (found A and B):", string(relPath))
 			return true
 		}
 	}
@@ -183,7 +182,7 @@ type prehash struct {
 
 
 // hashPrefix returns a precomputed hash based on the given prefix.
-func hashPrefix(prefix string, hashType hashType) prehash {
+func hashPrefix(prefix []byte, hashType hashType) prehash {
 	seed1 := uint32(0x7FED7FED)
 	seed2 := uint32(0xEEEEEEEE)
 	for i := 0; i < len(prefix); i++ {
@@ -199,7 +198,7 @@ func hashPrefix(prefix string, hashType hashType) prehash {
 
 // genHash returns the hash of the given string, based on the specified hash
 // type and the precomputed hash of the string prefix.
-func (pre prehash) genHash(s string, hashType hashType) uint32 {
+func (pre prehash) genHash(s []byte, hashType hashType) uint32 {
 	seed1 := pre.seed1
 	seed2 := pre.seed2
 	for i := 0; i < len(s); i++ {
@@ -212,7 +211,7 @@ func (pre prehash) genHash(s string, hashType hashType) uint32 {
 
 // genHash returns the hash of the given string, based on the specified hash
 // type.
-func genHash(s string, hashType hashType) uint32 {
+func genHash(s []byte, hashType hashType) uint32 {
 	seed1 := uint32(0x7FED7FED)
 	seed2 := uint32(0xEEEEEEEE)
 	for i := 0; i < len(s); i++ {
