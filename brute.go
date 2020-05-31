@@ -174,7 +174,6 @@ type prehash struct {
 	seed2 uint32
 }
 
-
 // hashPrefix returns a precomputed hash based on the given prefix.
 func hashPrefix(prefix []byte, hashType hashType) prehash {
 	seed1 := uint32(0x7FED7FED)
