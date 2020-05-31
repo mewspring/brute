@@ -82,7 +82,7 @@ loop:
 									if check(dunName, preA, preB) {
 										fmt.Println("FOUND:", string(dunName))
 										data := []byte(dunName)
-										const outputPath = "found.txt"
+										const outputPath = "found_hash.txt"
 										fmt.Println("creating %q", outputPath)
 										if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
 											log.Printf("unable to create file %q", outputPath)
