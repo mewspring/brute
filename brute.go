@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"runtime"
-	"strings"
 	"sync"
 	"time"
 )
@@ -18,7 +17,7 @@ func main() {
 	// "levels\l1data\" subdirectory. Furthermore, the file name will start with a
 	// character up until 'h', as it should come alphabetically before
 	// "hero1.dun".
-	const charsetFirstChar = "abcdefgh0123456789-_"
+	const charsetFirstChar = "ABCDEFGH0123456789-_"
 	n := runtime.NumCPU()
 	fmt.Println("num CPU:", n)
 	m := len(charsetFirstChar) / n
@@ -42,7 +41,7 @@ func main() {
 
 func brute(charsetFirstChar string, wg *sync.WaitGroup, nsamples int) {
 	const (
-		charset = "abcdefghijklmnopqrstuvwxyz0123456789-_"
+		charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_"
 	)
 	first := true
 	const n = 8
@@ -67,7 +66,7 @@ loop:
 								for _, h := range charset {
 									buf[7] = byte(h)
 									dunName := string(buf[:])
-									relPath := `levels\l1data\` + dunName + ".dun"
+									relPath := `LEVELS\L1DATA\` + dunName + ".DUN"
 									if first {
 										fmt.Println("relPath (first):", relPath)
 										first = false
@@ -170,7 +169,6 @@ const (
 // genHash returns the hash of the given string, based on the specified hash
 // type.
 func genHash(s string, hashType hashType) uint32 {
-	s = strings.ToUpper(s)
 	seed1 := uint32(0x7FED7FED)
 	seed2 := uint32(0xEEEEEEEE)
 	for i := 0; i < len(s); i++ {
